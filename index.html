@@ -1,55 +1,50 @@
 const API = "https://reelgrab-backend-production.up.railway.app";
 
-let tab = "ig";
-let kalite = "1080";
-let videoInfo = null;
-
-const tabEmojis = { ig: "📸", tt: "🎵", yt: "▶" };
-const tabColors = { ig: "#D4537E", tt: "#534AB7", yt: "#E24B4A" };
-
 function analiz() {
   const url = document.getElementById("urlInput").value.trim();
-  if (!url) return showErr("URL boş ola bilməz");
+  if (!url) return showErr("URL boşdur");
 
-  document.getElementById("btnAnaliz").disabled = true;
+  setProgress(40, "Analiz...");
 
-  setProgress(40, "Video analiz edilir...");
-
-  fetch(API + "/download", {
+  fetch(API + "/analiz", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url: url,
-      quality: kalite,
-      mp3: document.getElementById("opt-mp3").classList.contains("on")
-    })
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({url})
   })
-  .then(async res => {
+  .then(r => r.json())
+  .then(data => {
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Server error");
-    }
-
-    setProgress(100, "Hazır");
-
-    const blob = await res.blob();
-    const a = document.createElement("a");
-
-    const ext = document.getElementById("opt-mp3").classList.contains("on") ? "mp3" : "mp4";
-
-    a.href = URL.createObjectURL(blob);
-    a.download = "reelgrab_" + Date.now() + "." + ext;
-    a.click();
+    document.getElementById("pTitle").textContent = data.baslik;
+    document.getElementById("preview").classList.add("vis");
 
     hideProgress();
-
   })
   .catch(e => {
     showErr(e.message);
     hideProgress();
-  })
-  .finally(() => {
-    document.getElementById("btnAnaliz").disabled = false;
   });
+}
+
+
+function indir() {
+  const url = document.getElementById("urlInput").value.trim();
+  const mp3 = document.getElementById("opt-mp3").classList.contains("on");
+
+  fetch(API + "/download", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      url,
+      quality: kalite,
+      mp3
+    })
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "video.mp4";
+    a.click();
+  })
+  .catch(e => showErr(e.message));
 }
