@@ -7,7 +7,6 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 app = Flask(__name__)
-
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 PORT = int(os.environ.get("PORT", 5000))
@@ -17,18 +16,32 @@ DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
-def ffmpeg_installed():
+def ffmpeg_ok():
     return shutil.which("ffmpeg") is not None
 
 
 @app.route("/")
 def home():
+    return jsonify({"status": "online", "ffmpeg": ffmpeg_ok()})
+
+
+# ANALYZE (frontend için lazım)
+@app.route("/analiz", methods=["POST"])
+def analiz():
+    data = request.get_json()
+    url = data.get("url")
+
+    if not url:
+        return jsonify({"error": "no url"}), 400
+
     return jsonify({
-        "status": "online",
-        "ffmpeg": ffmpeg_installed()
+        "baslik": "Video hazır",
+        "thumbnail": "",
+        "sure": "unknown"
     })
 
 
+# DOWNLOAD
 @app.route("/download", methods=["POST"])
 def download():
 
@@ -43,14 +56,12 @@ def download():
             return jsonify({"error": "URL missing"}), 400
 
         uid = str(uuid.uuid4())[:8]
-        output = os.path.join(DOWNLOAD_DIR, f"{uid}.%(ext)s")
+        out = os.path.join(DOWNLOAD_DIR, f"{uid}.%(ext)s")
 
         if mp3:
-            ydl_opts = {
+            opts = {
                 "format": "bestaudio/best",
-                "outtmpl": output,
-                "noplaylist": True,
-                "quiet": True,
+                "outtmpl": out,
                 "postprocessors": [{
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
@@ -58,54 +69,26 @@ def download():
                 }]
             }
         else:
+            fmt = f"bv*[height<={quality}]+ba/b"
 
-            fmt = "bv*+ba/b"
-
-            if quality == "1080":
-                fmt = "bv*[height<=1080]+ba/b"
-            elif quality == "720":
-                fmt = "bv*[height<=720]+ba/b"
-            elif quality == "1440":
-                fmt = "bv*[height<=1440]+ba/b"
-            elif quality == "2160":
-                fmt = "bv*[height<=2160]+ba/b"
-
-            ydl_opts = {
+            opts = {
                 "format": fmt,
-                "outtmpl": output,
+                "outtmpl": out,
                 "merge_output_format": "mp4",
                 "noplaylist": True,
-                "quiet": True,
-                "retries": 10,
-                "fragment_retries": 10
+                "quiet": True
             }
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(url, download=True)
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
 
-        files = [f for f in os.listdir(DOWNLOAD_DIR) if f.startswith(uid)]
+        file = [f for f in os.listdir(DOWNLOAD_DIR) if f.startswith(uid)][0]
+        path = os.path.join(DOWNLOAD_DIR, file)
 
-        if not files:
-            return jsonify({"error": "file not found"}), 500
-
-        path = os.path.join(DOWNLOAD_DIR, files[0])
-
-        response = send_file(path, as_attachment=True, download_name=files[0])
-
-        @response.call_on_close
-        def cleanup():
-            try:
-                os.remove(path)
-            except:
-                pass
-
-        return response
+        return send_file(path, as_attachment=True)
 
     except Exception as e:
-        return jsonify({
-            "error": "backend crash",
-            "detail": str(e)
-        }), 500
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
