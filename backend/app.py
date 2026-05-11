@@ -1,4 +1,18 @@
 import os
+                "thumbnail": info.get("thumbnail", ""),
+                "uploader": info.get("uploader", ""),
+                "view_count": info.get("view_count", 0),
+                "like_count": info.get("like_count", 0),
+                "platform": platform,
+            })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# =========================
+# DOWNLOAD
+# =========================
 @app.route("/indir", methods=["POST"])
 def indir():
     data = request.get_json(force=True)
