@@ -1,4 +1,4 @@
 Flask==3.0.3
 flask-cors==5.0.0
-yt-dlp==2026.05.01
-Werkzeug==3.0.3
+yt-dlp
+gunicorn
