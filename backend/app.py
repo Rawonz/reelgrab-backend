@@ -35,25 +35,20 @@ def get_ydl_opts(kalite="1080", mp3=False, filepath=None):
         base["cookiefile"] = cookie_file
 
     if mp3:
-        base["format"] = "bestaudio/best"
-        base["postprocessors"] = [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192",
-        }]
+        # ffmpeg olmadan sadece audio stream indir
+        base["format"] = "bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio"
     else:
         kalite = str(kalite)
+        # ffmpeg olmadan çalışan tek-stream format seçimi
+        # progressive mp4 = video+audio birleşik gelir, ffmpeg gerekmez
         if kalite in ["4k", "2160"]:
-            fmt = "bestvideo[height<=2160][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=2160]+bestaudio/best"
+            base["format"] = "best[height<=2160][ext=mp4]/best[ext=mp4]/best"
         elif kalite == "1080":
-            fmt = "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best"
+            base["format"] = "best[height<=1080][ext=mp4]/best[ext=mp4]/best"
         elif kalite == "720":
-            fmt = "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best"
+            base["format"] = "best[height<=720][ext=mp4]/best[ext=mp4]/best"
         else:
-            fmt = "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best"
-
-        base["format"] = fmt
-        base["merge_output_format"] = "mp4"
+            base["format"] = "best[height<=480][ext=mp4]/best[ext=mp4]/best"
 
     return base
 
