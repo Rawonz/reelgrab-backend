@@ -7,61 +7,82 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
-PORT = int(os.environ.get("PORT", 5000))
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
+DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 
-def ffmpeg_ok():
+def ffmpeg_installed():
     return shutil.which("ffmpeg") is not None
 
 
+# -------------------------
+# HEALTH CHECK
+# -------------------------
 @app.route("/")
 def home():
-    return jsonify({"status": "online", "ffmpeg": ffmpeg_ok()})
-
-
-# ANALYZE (frontend için lazım)
-@app.route("/analiz", methods=["POST"])
-def analiz():
-    data = request.get_json()
-    url = data.get("url")
-
-    if not url:
-        return jsonify({"error": "no url"}), 400
-
     return jsonify({
-        "baslik": "Video hazır",
-        "thumbnail": "",
-        "sure": "unknown"
+        "status": "online",
+        "ffmpeg": ffmpeg_installed()
     })
 
 
-# DOWNLOAD
-@app.route("/download", methods=["POST"])
-def download():
+# -------------------------
+# ANALİZ ENDPOINT (FRONTEND BUNU BEKLİYOR)
+# -------------------------
+@app.route("/analiz", methods=["POST"])
+def analiz():
+    data = request.json
+    url = data.get("url")
+
+    if not url:
+        return jsonify({"hata": "URL boş"}), 400
 
     try:
-        data = request.get_json(force=True)
+        ydl_opts = {
+            "quiet": True,
+            "noplaylist": True
+        }
 
-        url = data.get("url")
-        quality = data.get("quality", "1080")
-        mp3 = data.get("mp3", False)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
 
-        if not url:
-            return jsonify({"error": "URL missing"}), 400
+        return jsonify({
+            "baslik": info.get("title", "Video"),
+            "thumbnail": info.get("thumbnail"),
+            "sure": info.get("duration")
+        })
 
-        uid = str(uuid.uuid4())[:8]
-        out = os.path.join(DOWNLOAD_DIR, f"{uid}.%(ext)s")
+    except Exception as e:
+        return jsonify({"hata": str(e)}), 500
+
+
+# -------------------------
+# DOWNLOAD ENDPOINT (FRONTEND /indir ÇAĞIRIYOR)
+# -------------------------
+@app.route("/indir", methods=["POST"])
+def indir():
+    data = request.json
+
+    url = data.get("url")
+    quality = data.get("kalite", "1080")
+    mp3 = data.get("mp3", False)
+
+    if not url:
+        return jsonify({"hata": "URL boş"}), 400
+
+    uid = str(uuid.uuid4())[:8]
+    output = f"{DOWNLOAD_DIR}/{uid}.%(ext)s"
+
+    try:
 
         if mp3:
-            opts = {
+            ydl_opts = {
                 "format": "bestaudio/best",
-                "outtmpl": out,
+                "outtmpl": output,
+                "noplaylist": True,
+                "quiet": True,
                 "postprocessors": [{
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": "mp3",
@@ -69,27 +90,51 @@ def download():
                 }]
             }
         else:
-            fmt = f"bv*[height<={quality}]+ba/b"
+            fmt = "best"
+            if quality == "2160":
+                fmt = "bv*[height<=2160]+ba"
+            elif quality == "1440":
+                fmt = "bv*[height<=1440]+ba"
+            elif quality == "1080":
+                fmt = "bv*[height<=1080]+ba"
+            elif quality == "720":
+                fmt = "bv*[height<=720]+ba"
 
-            opts = {
+            ydl_opts = {
                 "format": fmt,
-                "outtmpl": out,
+                "outtmpl": output,
                 "merge_output_format": "mp4",
                 "noplaylist": True,
                 "quiet": True
             }
 
-        with yt_dlp.YoutubeDL(opts) as ydl:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        file = [f for f in os.listdir(DOWNLOAD_DIR) if f.startswith(uid)][0]
-        path = os.path.join(DOWNLOAD_DIR, file)
+        file_path = None
+        for f in os.listdir(DOWNLOAD_DIR):
+            if f.startswith(uid):
+                file_path = os.path.join(DOWNLOAD_DIR, f)
+                break
 
-        return send_file(path, as_attachment=True)
+        if not file_path:
+            return jsonify({"hata": "dosya bulunamadı"}), 500
+
+        response = send_file(file_path, as_attachment=True)
+
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.remove(file_path)
+            except:
+                pass
+
+        return response
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"hata": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
