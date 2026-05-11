@@ -13,7 +13,6 @@ os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 
 def get_cookie_file():
-    """YT_COOKIES env variable varsa geçici bir dosyaya yazar, path döndürür."""
     cookies_content = os.environ.get("YT_COOKIES", "")
     if not cookies_content.strip():
         return None
@@ -29,20 +28,31 @@ def get_ydl_opts(kalite="1080", mp3=False, filepath=None):
     base = {
         "outtmpl": filepath or f"{DOWNLOAD_FOLDER}/%(title)s.%(ext)s",
         "quiet": True,
+        "no_warnings": True,
     }
 
     if cookie_file:
         base["cookiefile"] = cookie_file
 
     if mp3:
-        base["format"] += f"/bestvideo+bestaudio/best"
+        base["format"] = "bestaudio/best"
         base["postprocessors"] = [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }]
     else:
-        base["format"] = f"bestvideo[height<={kalite}]+bestaudio/best"
+        kalite = str(kalite)
+        if kalite in ["4k", "2160"]:
+            fmt = "bestvideo[height<=2160][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=2160]+bestaudio/best"
+        elif kalite == "1080":
+            fmt = "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best"
+        elif kalite == "720":
+            fmt = "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best"
+        else:
+            fmt = "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best"
+
+        base["format"] = fmt
         base["merge_output_format"] = "mp4"
 
     return base
@@ -60,7 +70,11 @@ def analiz():
         return jsonify({"hata": "URL boş olamaz"}), 400
 
     cookie_file = get_cookie_file()
-    ydl_opts = {"quiet": True, "skip_download": True}
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True,
+        "no_warnings": True,
+    }
     if cookie_file:
         ydl_opts["cookiefile"] = cookie_file
 
@@ -86,9 +100,7 @@ def indir():
     if not url:
         return jsonify({"hata": "URL boş olamaz"}), 400
 
-    # Her indirme için benzersiz dosya adı
     unique_id = str(uuid.uuid4())[:8]
-    ext = "mp3" if mp3 else "mp4"
     filepath = f"{DOWNLOAD_FOLDER}/{unique_id}.%(ext)s"
 
     opts = get_ydl_opts(kalite=kalite, mp3=mp3, filepath=filepath)
@@ -98,7 +110,6 @@ def indir():
             info = ydl.extract_info(url, download=True)
             title = info.get("title", "video")
 
-        # İndirilen dosyayı bul
         for fname in os.listdir(DOWNLOAD_FOLDER):
             if fname.startswith(unique_id):
                 fpath = os.path.join(DOWNLOAD_FOLDER, fname)
@@ -109,7 +120,6 @@ def indir():
                     as_attachment=True,
                     download_name=download_name
                 )
-                # Gönderdikten sonra sil
                 @response.call_on_close
                 def cleanup():
                     try:
