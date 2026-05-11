@@ -35,14 +35,14 @@ def get_ydl_opts(kalite="1080", mp3=False, filepath=None):
         base["cookiefile"] = cookie_file
 
     if mp3:
-        base["format"] = "bestaudio/best"
+        base["format"] += f"/bestvideo+bestaudio/best"
         base["postprocessors"] = [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }]
     else:
-        base["format"] = f"bestvideo[height<={kalite}]+bestaudio/best/best[height<={kalite}]"
+        base["format"] = f"bestvideo[height<={kalite}]+bestaudio/best"
         base["merge_output_format"] = "mp4"
 
     return base
