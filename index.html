@@ -33,10 +33,7 @@
     padding: 24px;
   }
 
-  .wrap {
-    width: 100%;
-    max-width: 520px;
-  }
+  .wrap { width: 100%; max-width: 520px; }
 
   .logo {
     font-family: 'Syne', sans-serif;
@@ -46,7 +43,6 @@
     margin-bottom: 6px;
     letter-spacing: -1px;
   }
-
   .logo span { color: var(--ig); }
 
   .sub {
@@ -92,7 +88,6 @@
   .tab.active.ig { background: rgba(212,83,126,0.18); border-color: rgba(212,83,126,0.5); }
   .tab.active.tt { background: rgba(83,74,183,0.18); border-color: rgba(83,74,183,0.5); }
   .tab.active.yt { background: rgba(226,75,74,0.18); border-color: rgba(226,75,74,0.5); }
-
   .tab svg { width: 16px; height: 16px; fill: currentColor; }
 
   .field-label {
@@ -122,7 +117,6 @@
     outline: none;
     transition: border-color 0.2s;
   }
-
   input[type="text"]:focus { border-color: rgba(83,74,183,0.6); }
   input[type="text"]::placeholder { color: rgba(240,240,248,0.2); }
 
@@ -139,7 +133,6 @@
     transition: opacity 0.18s, transform 0.1s;
     background: var(--ig);
   }
-
   .btn-main:hover { opacity: 0.85; }
   .btn-main:active { transform: scale(0.97); }
   .btn-main:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -164,7 +157,6 @@
     text-align: center;
     transition: all 0.15s;
   }
-
   .qpill small { display: block; font-size: 10px; color: var(--muted); margin-top: 2px; }
   .qpill.on { border-color: rgba(83,74,183,0.6); background: rgba(83,74,183,0.15); color: #AFA9EC; }
   .qpill.on small { color: rgba(175,169,236,0.7); }
@@ -192,14 +184,9 @@
     gap: 5px;
     transition: all 0.15s;
   }
-
   .opt.on { background: rgba(30,160,120,0.12); border-color: rgba(30,160,120,0.4); color: #5DCAA5; }
 
-  .progress {
-    margin-top: 16px;
-    display: none;
-  }
-
+  .progress { margin-top: 16px; display: none; }
   .progress.vis { display: block; }
 
   .prog-track {
@@ -215,7 +202,7 @@
     border-radius: 2px;
     background: var(--tt);
     width: 0%;
-    transition: width 0.3s ease;
+    transition: width 0.4s ease;
   }
 
   .prog-txt {
@@ -234,12 +221,10 @@
     gap: 14px;
     align-items: center;
   }
-
   .preview.vis { display: flex; }
 
   .thumb {
-    width: 68px;
-    height: 68px;
+    width: 68px; height: 68px;
     border-radius: 8px;
     object-fit: cover;
     border: 1px solid var(--border);
@@ -248,8 +233,7 @@
   }
 
   .thumb-placeholder {
-    width: 68px;
-    height: 68px;
+    width: 68px; height: 68px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--surface);
@@ -297,7 +281,6 @@
     justify-content: center;
     gap: 6px;
   }
-
   .btn-dl:hover { opacity: 0.85; }
   .btn-dl:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -310,8 +293,8 @@
     font-size: 12px;
     color: #F09595;
     display: none;
+    line-height: 1.5;
   }
-
   .error.vis { display: block; }
 
   .hist-card {
@@ -346,20 +329,15 @@
     padding: 9px 12px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: transparent;
   }
 
   .hbadge {
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     border-radius: 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 14px;
     flex-shrink: 0;
   }
-
   .hbadge.ig { background: rgba(212,83,126,0.18); }
   .hbadge.tt { background: rgba(83,74,183,0.18); }
   .hbadge.yt { background: rgba(226,75,74,0.18); }
@@ -422,9 +400,9 @@
     </div>
 
     <div class="opts">
-      <button class="opt on" id="opt-wm" onclick="toggle(this)">✓ Filigransız</button>
-      <button class="opt on" id="opt-ses" onclick="toggle(this)">✓ Ses dahil</button>
-      <button class="opt" id="opt-mp3" onclick="toggle(this)">♪ Sadece MP3</button>
+      <button class="opt on" id="opt-wm" onclick="toggleOpt(this)">✓ Filigransız</button>
+      <button class="opt on" id="opt-ses" onclick="toggleOpt(this)">✓ Ses dahil</button>
+      <button class="opt" id="opt-mp3" onclick="toggleOpt(this)">♪ Sadece MP3</button>
     </div>
 
     <div class="progress" id="prog">
@@ -457,15 +435,15 @@
 </div>
 
 <script>
-  // ⬇ BURAYA BACKEND URL'İNİ YAZ (Railway/Render'dan aldıktan sonra)
-  const API = "https://reelgrab-backend-production.up.railway.app/";
+  // ← Buraya Railway URL'ini yaz (sonda / olmadan)
+  const API = "https://reelgrab-backend-production.up.railway.app";
 
   let tab = "ig";
   let kalite = "1080";
   let videoInfo = null;
 
-  const tabEmojis = { ig: "📸", tt: "🎵", yt: "▶" };
-  const tabColors = { ig: "#D4537E", tt: "#534AB7", yt: "#E24B4A" };
+  const tabEmojis  = { ig: "📸", tt: "🎵", yt: "▶️" };
+  const tabColors  = { ig: "#D4537E", tt: "#534AB7", yt: "#E24B4A" };
   const placeholders = {
     ig: "https://www.instagram.com/reel/...",
     tt: "https://www.tiktok.com/@kullanici/video/...",
@@ -474,15 +452,13 @@
 
   function setTab(t) {
     tab = t;
-    ["ig","tt","yt"].forEach(x => {
-      const el = document.getElementById("tab-"+x);
-      el.classList.remove("active");
-    });
+    ["ig","tt","yt"].forEach(x => document.getElementById("tab-"+x).classList.remove("active"));
     document.getElementById("tab-"+t).classList.add("active");
     document.getElementById("urlInput").placeholder = placeholders[t];
     document.getElementById("btnAnaliz").style.background = tabColors[t];
     document.getElementById("btnDl").style.background = tabColors[t];
     hidePreview();
+    hideErr();
   }
 
   function setQ(el, q) {
@@ -492,12 +468,11 @@
     if (videoInfo) document.getElementById("pQ").textContent = q + "p";
   }
 
-  function toggle(el) {
+  function toggleOpt(el) {
     el.classList.toggle("on");
-    if (el.id === "opt-mp3" && el.classList.contains("on")) {
-      document.querySelectorAll(".qpill").forEach(p => p.style.opacity = "0.3");
-    } else if (el.id === "opt-mp3") {
-      document.querySelectorAll(".qpill").forEach(p => p.style.opacity = "1");
+    if (el.id === "opt-mp3") {
+      const on = el.classList.contains("on");
+      document.querySelectorAll(".qpill").forEach(p => p.style.opacity = on ? "0.35" : "1");
     }
   }
 
@@ -505,7 +480,10 @@
     const b = document.getElementById("errBox");
     b.textContent = "⚠ " + msg;
     b.classList.add("vis");
-    setTimeout(() => b.classList.remove("vis"), 5000);
+  }
+
+  function hideErr() {
+    document.getElementById("errBox").classList.remove("vis");
   }
 
   function hidePreview() {
@@ -528,35 +506,42 @@
     const url = document.getElementById("urlInput").value.trim();
     if (!url) { showErr("Lütfen bir URL gir"); return; }
 
-    document.getElementById("btnAnaliz").disabled = true;
-    document.getElementById("errBox").classList.remove("vis");
+    const btn = document.getElementById("btnAnaliz");
+    btn.disabled = true;
+    hideErr();
     hidePreview();
 
-    setProgress(30, "URL analiz ediliyor...");
-    setTimeout(() => setProgress(60, "Video bilgileri çekiliyor..."), 600);
+    setProgress(20, "Bağlanıyor...");
+    setTimeout(() => setProgress(55, "Video bilgileri alınıyor..."), 800);
 
     try {
-      const res = await fetch(API + "/analiz", {
+      const res = await fetch(`${API}/analiz`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
       });
+
       const data = await res.json();
 
-      if (data.hata) { showErr(data.hata); hideProgress(); return; }
+      if (data.hata) {
+        showErr(data.hata);
+        hideProgress();
+        return;
+      }
 
       setProgress(100, "Hazır!");
       videoInfo = data;
 
       setTimeout(() => {
         hideProgress();
+
         document.getElementById("pTitle").textContent = data.baslik;
         document.getElementById("pQ").textContent = kalite + "p";
         document.getElementById("pDur").textContent = data.sure || "—";
 
         const tw = document.getElementById("thumbWrap");
         if (data.thumbnail) {
-          tw.innerHTML = `<img class="thumb" src="${data.thumbnail}" alt="kapak" onerror="this.parentNode.textContent='${tabEmojis[tab]}'" />`;
+          tw.innerHTML = `<img class="thumb" src="${data.thumbnail}" alt="kapak" onerror="this.parentNode.innerHTML='${tabEmojis[tab]}'" />`;
         } else {
           tw.textContent = tabEmojis[tab];
         }
@@ -565,10 +550,10 @@
       }, 400);
 
     } catch (e) {
-      showErr("Sunucuya bağlanılamadı. Backend'in çalıştığına emin ol.");
+      showErr("Sunucuya bağlanılamadı: " + e.message);
       hideProgress();
     } finally {
-      document.getElementById("btnAnaliz").disabled = false;
+      btn.disabled = false;
     }
   }
 
@@ -580,26 +565,33 @@
     const btn = document.getElementById("btnDl");
     btn.disabled = true;
     btn.textContent = "⏳ İndiriliyor...";
+    hideErr();
 
     try {
-      const res = await fetch(API + "/indir", {
+      const res = await fetch(`${API}/indir`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, kalite, mp3 })
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        showErr(err.hata || "Bir hata oluştu");
+        let err = "Bir hata oluştu";
+        try { const j = await res.json(); err = j.hata || err; } catch {}
+        showErr(err);
         return;
       }
 
       const blob = await res.blob();
-      const a = document.createElement("a");
       const ext = mp3 ? "mp3" : "mp4";
+      const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = (videoInfo.baslik || "video").replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,"") + "." + ext;
+      a.download = (videoInfo.baslik || "video")
+        .replace(/[^\w\sğüşıöçĞÜŞİÖÇ]/g, "")
+        .trim()
+        .substring(0, 80) + "." + ext;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(a.href);
 
       btn.textContent = "✓ İndirildi!";
@@ -615,6 +607,7 @@
     } catch (e) {
       showErr("İndirme başarısız: " + e.message);
       btn.textContent = "⬇ İndir";
+      btn.style.background = tabColors[tab];
       btn.disabled = false;
     }
   }
@@ -628,7 +621,7 @@
       <div class="hbadge ${tab}">${tabEmojis[tab]}</div>
       <div style="flex:1;min-width:0">
         <div class="hname">${baslik}</div>
-        <div class="hmeta">${mp3?"MP3":q+"p"} · şimdi</div>
+        <div class="hmeta">${mp3 ? "MP3" : q + "p"} · şimdi</div>
       </div>
       <span class="badge-ok">✓ Tamam</span>
     `;
